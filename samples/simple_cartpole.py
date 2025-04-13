@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch import distributions
 from torch import optim
 
-# Check if CUDA is available and set device accordingly
+# init cuda
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
@@ -115,7 +115,7 @@ def main():
     OUTPUT_DIM = env.action_space.n
     DROPOUT = 0.5
     episode_returns = []
-    policy = PolicyNetwork(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM, DROPOUT).to(device)
+    policy = PolicyNetwork(INPUT_DIM, 256, 128, OUTPUT_DIM, DROPOUT).to(device)
     LR = 0.01
     optimizer = optim.Adam(policy.parameters(), lr=LR)
     
