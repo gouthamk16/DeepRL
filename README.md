@@ -1,9 +1,10 @@
 ## DeepRL
 
-Dumb code to trains computers through RL with policies optimized using Deep Neural Nets
+Trying out RL algorithms on gym environments using neural nets. Researching new stuff.
 
-Useless barely working sample for policy optimization using deep learning in [samples](samples/)
+Useless, barely working samples for policy optimization using neural nets in [samples](samples/)
 
-### To do:
+### Fix:
 1. Create a sample environment (kind of replicating [gymnasium](https://github.com/Farama-Foundation/Gymnasium))
-2. Implement Proximal Policy Optimization (PPO) on the created env.
+2. Proximal Policy Optimization (PPO) on the CarRacing-v3 env.
+3. Fix the policy updates (reward fluctuates and makes no sense, might be the vanilla network), try KL divergence instead of the plain loss function, try removing the log probability from the loss calculation.
