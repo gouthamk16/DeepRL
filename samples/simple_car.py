@@ -23,7 +23,7 @@ print("Action space: ", env.action_space)
 ### Output: Discrete(5) | 0-4: do nothing, steer left, steer right, gas, brake
 
 # nn seed
-SEED = 1112
+SEED = 1111
 env.reset(seed=SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
@@ -34,12 +34,13 @@ if torch.cuda.is_available():
 class PolicyNetwork(nn.Module):
     def __init__(self, output_dim, dropout):
         super().__init__()
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=6, padding=1)
-        self.pool1 = nn.MaxPool2d(kernel_size=2)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=6, padding=1)
-        self.pool2 = nn.MaxPool2d(kernel_size=2)
-        self.fc1 = nn.Linear(28224, 512)
-        self.fc2 = nn.Linear(512, output_dim)
+        # Changed input channels from 3 to 1 for grayscale images
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=8)
+        self.pool1 = nn.MaxPool2d(kernel_size=4)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=8)
+        self.pool2 = nn.MaxPool2d(kernel_size=4)
+        self.fc1 = nn.Linear(576, 64)
+        self.fc2 = nn.Linear(64, output_dim)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
@@ -77,10 +78,15 @@ def forward_pass(env, policy, discount_factor, render_flag):
     done = False
     episode_returns = 0
     policy.train()
-    observation, info = env.reset()
+    observation, info = env.reset(seed = SEED)
     while not done:
-        norm_observation = torch.FloatTensor(observation/255.0).unsqueeze(0).permute(0, 3, 1, 2).to(device)
-        # print(norm_observation.shape)
+        # Convert RGB to grayscale and normalize
+        rgb_observation = torch.FloatTensor(observation/255.0).unsqueeze(0)
+        # Convert RGB to grayscale using weighted average (standard conversion weights)
+        grayscale_observation = 0.299 * rgb_observation[:, :, :, 0] + 0.587 * rgb_observation[:, :, :, 1] + 0.114 * rgb_observation[:, :, :, 2]
+        # Add channel dimension back and move to proper shape [B, C, H, W]
+        norm_observation = grayscale_observation.unsqueeze(1).to(device)
+        
         action_prediction = policy(norm_observation)
         action_prob = F.softmax(action_prediction, dim=-1)
         dist = distributions.Categorical(action_prob)
@@ -145,8 +151,8 @@ if __name__=='__main__':
         "reward_threshold": 900,
         "print_interval": 10,
         "dropout": 0.2,
-        "learning_rate": 0.001,
-        "render": False       
+        "learning_rate": 0.01,
+        "render": True       
     }
     
     teach(config)
